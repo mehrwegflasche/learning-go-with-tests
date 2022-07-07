@@ -4,23 +4,50 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 )
 
 const (
-	countdownStart = 3
-	finalWord      = "Go!"
+	FinalGreeting  = "Go!"
+	countDownStart = 3
 )
 
 func Countdown(out io.Writer, s Sleeper) {
-	for i := countdownStart; i > 0; i-- {
-		s.Sleep()
+	for i := countDownStart; i > 0; i-- {
 		fmt.Fprintln(out, i)
+		s.Sleep()
+
 	}
-	s.Sleep()
-	fmt.Fprint(out, finalWord)
+	fmt.Fprint(out, FinalGreeting)
 }
 
 func main() {
-	sleeper := &DefaultSleeper{}
-	Countdown(os.Stdout, sleeper)
+	Countdown(os.Stdout, &DefaultSleeper{})
 }
+
+type Sleeper interface {
+	Sleep()
+}
+
+type SpySleeperPrinter struct {
+	Calls []string
+}
+
+func (s *SpySleeperPrinter) Sleep() {
+	s.Calls = append(s.Calls, sleep)
+}
+
+func (s *SpySleeperPrinter) Write(p []byte) (n int, err error) {
+	s.Calls = append(s.Calls, write)
+	return
+}
+
+type DefaultSleeper struct {
+}
+
+func (d *DefaultSleeper) Sleep() {
+	time.Sleep(time.Second * 1)
+}
+
+const write = "write"
+const sleep = "sleep"
